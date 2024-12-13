@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.preprocessing import LabelEncoder
+
+# Load the dataset
+data = pd.read_csv('fraudTest.csv')
+
+# Drop rows with missing values
+data = data.dropna(how="any")
+
+# Check the data types before processing
+print("Data types before processing:")
+print(data.dtypes)
+
+# For categorical columns, we encode them as numeric using LabelEncoder
+for col in data.select_dtypes(include='object').columns:
+    label_encoder = LabelEncoder()
+    data[col] = label_encoder.fit_transform(data[col])
+
+# Check if all columns are now numeric
+print("Data types after encoding:")
+print(data.dtypes)
+
+# Select features and target variable
+X = data.iloc[:, :-1]  # All columns except the last one (target)
+y = data.iloc[:, -1]   # The last column (target)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+# Initialize the RandomForest model
+clf = RandomForestClassifier(n_estimators=100, random_state=0)
+
+# Fit the model
+clf.fit(X_train, y_train)
+
+# Predict the labels for the test set
+y_pred = clf.predict(X_test)
+
+# Evaluate the model performance
+accuracy = accuracy_score(y_test, y_pred)
+roc_auc = roc_auc_score(y_test, y_pred)
+
+# Print the results
+print(f"Accuracy Score: {accuracy}")
+print(f"ROC AUC Score: {roc_auc}")
