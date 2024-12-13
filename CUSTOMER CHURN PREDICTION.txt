@@ -1,0 +1,107 @@
+###### Importing necessary libraries
+import pandas as pd
+df=pd.read_csv("Churn_Modelling.csv")
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.model_selection import GridSearchCV
+import joblib
+#import shap
+
+# Assuming `df` is the dataframe containing the historical customer data
+# Example DataFrame (replace with actual data)
+# df = pd.read_csv('customer_data.csv')
+
+# For demonstration purposes, we create a simple synthetic dataset
+# Replace this with your actual customer data
+df = pd.DataFrame({
+    'Age': np.random.randint(18, 70, size=1000),
+    'Gender': np.random.choice(['Male', 'Female'], size=1000),
+    'Region': np.random.choice(['North', 'South', 'East', 'West'], size=1000),
+    'Tenure': np.random.randint(1, 60, size=1000),
+    'Subscription Plan': np.random.choice(['Basic', 'Premium'], size=1000),
+    'Monthly Fee': np.random.randint(10, 100, size=1000),
+    'Login Frequency': np.random.randint(1, 30, size=1000),
+    'Usage Duration': np.random.randint(10, 500, size=1000),
+    'Support Tickets': np.random.randint(0, 5, size=1000),
+    'Churn': np.random.choice([0, 1], size=1000)  # 0 = Not churned, 1 = Churned
+})
+
+# Data Preprocessing
+# Encoding categorical features
+df['Gender'] = df['Gender'].map({'Male': 0, 'Female': 1})
+df = pd.get_dummies(df, columns=['Region', 'Subscription Plan'], drop_first=True)
+
+# Feature engineering (e.g., creating a 'Customer Tenure' feature)
+df['Customer Tenure'] = df['Tenure']
+
+# Features (X) and target (y)
+X = df.drop(['Churn'], axis=1)  # Features (exclude target column)
+y = df['Churn']                # Target variable (churn indicator)
+
+# Split the data into 80% train and 20% test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize and train the Random Forest Classifier
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = rf_model.predict(X_test)
+
+# Evaluate the model
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Feature Importance Plot
+feature_importances = rf_model.feature_importances_
+features = X.columns
+plt.figure(figsize=(10, 6))
+plt.barh(features, feature_importances)
+plt.xlabel('Feature Importance')
+plt.title('Feature Importance for Churn Prediction')
+plt.show()
+
+# Hyperparameter Tuning (optional)
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [10, 20, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+
+grid_search = GridSearchCV(estimator=RandomForestClassifier(random_state=42), param_grid=param_grid, cv=3)
+grid_search.fit(X_train, y_train)
+print("Best Parameters from Grid Search:", grid_search.best_params_)
+
+# Retrain the model using the best parameters
+rf_model_best = grid_search.best_estimator_
+rf_model_best.fit(X_train, y_train)
+
+# Re-evaluate with the best model
+y_pred_best = rf_model_best.predict(X_test)
+print("Best Model Accuracy:", accuracy_score(y_test, y_pred_best))
+print("Best Model Confusion Matrix:\n", confusion_matrix(y_test, y_pred_best))
+print("Best Model Classification Report:\n", classification_report(y_test, y_pred_best))
+
+# Save the trained model using joblib
+joblib.dump(rf_model_best, 'churn_prediction_model.pkl')
+
+# Load the model (when needed for deployment)
+model = joblib.load('churn_prediction_model.pkl')
+
+# Predict churn for new data (example)
+new_data = np.array([[45, 1, 12, 30, 150, 10, 0, 1, 0, 1]])  # Example customer data
+#prediction = model.predict(new_data)
+print("Churn Prediction for New Customer:")
+
+# SHAP (Shapley Additive Explanations) for model interpretation
+#explainer = TreeExplainer(rf_model_best)
+#shap_values = explainer.shap_values(X_test)
+
+# Visualize the SHAP values
+#shap.summary_plot(shap_values[1], X_test)  # 1 corresponds to the churn class
+
