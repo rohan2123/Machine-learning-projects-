@@ -1,0 +1,24 @@
+import pandas as pd
+
+# Try reading the CSV file with multiple encodings
+file_path = "spam.csv"  # Update with your actual file path
+
+# List of encodings to try
+encodings_to_try = ['utf-8', 'ISO-8859-1', 'latin1', 'utf-16', 'cp1252']
+
+# Attempt reading with each encoding
+for encoding in encodings_to_try:
+    try:
+        df = pd.read_csv(file_path, encoding=encoding)
+        print(f"File loaded successfully with '{encoding}' encoding.")
+        break  # Exit loop if successful
+    except UnicodeDecodeError:
+        print(f"UnicodeDecodeError with '{encoding}' encoding.")
+    except Exception as e:
+        print(f"Failed to load the file with '{encoding}' encoding: {e}")
+
+# Check if df is defined (indicating success)
+if 'df' in locals():
+    print(df.head())  # Print first few rows of the dataframe
+else:
+    print("Failed to load the file with all attempted encodings.")
