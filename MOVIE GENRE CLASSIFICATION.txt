@@ -1,0 +1,49 @@
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+from sklearn.pipeline import make_pipeline
+from nltk.corpus import stopwords
+import nltk
+
+# Download NLTK stopwords (if not already downloaded)
+nltk.download('stopwords')
+
+# Sample data (movie plot summaries with corresponding genres)
+
+import pandas as pd
+df = pd.read_csv('movies.csv', sep=',', encoding='utf-8', on_bad_lines='skip')
+print(df.head(100))  # Check the first few rows
+
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# Split data into features (X) and target (y)
+X = df['plot']        # Text data (plot summaries)
+y = df['genre']       # Genre labels
+
+# Split the data into training and test sets (80% training, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create a pipeline with TfidfVectorizer + Logistic Regression
+# TfidfVectorizer will convert the text data into numerical features, 
+# and LogisticRegression will be used as the classifier
+pipeline = make_pipeline(
+    TfidfVectorizer(stop_words=stopwords.words('english'), max_features=5000),  # Use stopwords to clean text
+    LogisticRegression(solver='liblinear')
+)
+
+# Train the model using the training data
+pipeline.fit(X_train, y_train)
+
+# Predict genres on the test set
+y_pred = pipeline.predict(X_test)
+
+# Evaluate the model
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Example prediction: Predict the genre of a new movie plot
+#new_plot = ["A detective solves mysteries while uncovering dark secrets."]
+#predicted_genre = pipeline.predict(new_plot)
+
+#print("Predicted Genre for new plot: ", predicted_genre[0])
